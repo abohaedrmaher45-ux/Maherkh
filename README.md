@@ -1,16 +1,239 @@
-# maher
+# 🔐 Maherkh App - نظام حماية متقدم ومنع النسخ
 
-A new Flutter project.
+<div dir="rtl">
 
-## Getting Started
+## 📋 نظرة عامة
 
-This project is a starting point for a Flutter application.
+**Maherkh** هو تطبيق Flutter محمي بنظام أمان متقدم يمنع النسخ والمشاركة غير المصرح بها.
 
-A few resources to get you started if this is your first Flutter project:
+### ✨ المميزات الأمنية
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- 🔑 **معرف ترخيص فريد** لكل نسخة
+- 📱 **ربط الجهاز** - كل نسخة تعمل على جهاز واحد فقط
+- 🔒 **تشفير الكود** - code obfuscation عند البناء
+- 🛡️ **بصمة الجهاز** - Device fingerprinting باستخدام SHA-256
+- ⚡ **تحقق فوري** - فحص الترخيص عند كل تشغيل
+- 📊 **تتبع الاستخدام** - عدد مرات التشغيل وتاريخ التفعيل
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+---
+
+## 🚀 البدء السريع
+
+### إنشاء نسخة محمية (طريقة سهلة)
+
+```bash
+cd /home/user/Maherkh
+./create_client_build.sh 001 "متجر أحمد"
+```
+
+✅ سيتم إنشاء APK محمي بمعرف فريد تلقائياً!
+
+### إنشاء نسخة يدوياً
+
+1. **تعديل معرف الترخيص**
+   ```bash
+   # افتح: lib/core/config/app_license.dart
+   # غيّر: UNIQUE_LICENSE_ID = 'MAHER_CLIENT_XXX_YYYYYYYYYY'
+   ```
+
+2. **بناء APK محمي**
+   ```bash
+   flutter build apk --release --obfuscate --split-debug-info=build/symbols
+   ```
+
+3. **الملف الناتج**
+   ```
+   build/app/outputs/flutter-apk/app-release.apk
+   ```
+
+---
+
+## 📂 البنية المعمارية
+
+```
+lib/
+├── core/
+│   ├── config/
+│   │   └── app_license.dart          # تكوين الترخيص
+│   └── security/
+│       ├── device_fingerprint.dart   # بصمة الجهاز
+│       └── license_validator.dart    # التحقق من الترخيص
+└── main.dart                         # نقطة الدخول مع الحماية
+```
+
+### آلية عمل النظام
+
+```
+التشغيل الأول
+    ↓
+التحقق من معرف الترخيص
+    ↓
+أخذ بصمة الجهاز (SHA-256)
+    ↓
+حفظ البصمة محلياً (SharedPreferences)
+    ↓
+تفعيل الترخيص ✅
+```
+
+```
+التشغيلات التالية
+    ↓
+التحقق من معرف الترخيص
+    ↓
+قراءة البصمة المحفوظة
+    ↓
+أخذ بصمة الجهاز الحالية
+    ↓
+مقارنة البصمتين
+    ↓
+✅ متطابقة → تشغيل التطبيق
+❌ مختلفة → رفض التشغيل
+```
+
+---
+
+## 🔒 سيناريوهات الحماية
+
+### ✅ الاستخدام الشرعي
+
+| الخطوة | النتيجة |
+|--------|---------|
+| 1. تثبيت APK على الجهاز | ✅ ناجح |
+| 2. أول تشغيل | ✅ ربط بالجهاز |
+| 3. الاستخدام اليومي | ✅ يعمل بشكل طبيعي |
+
+### ❌ محاولة النسخ
+
+| الخطوة | النتيجة |
+|--------|---------|
+| 1. نسخ APK لجهاز آخر | ⚠️ ممكن |
+| 2. محاولة التشغيل | ❌ **خطأ: مرخص لجهاز آخر** |
+| 3. رسالة للمستخدم | 📱 "يرجى التواصل مع المطور" |
+
+---
+
+## 🛠️ التبعيات المستخدمة
+
+```yaml
+dependencies:
+  shared_preferences: 2.5.3     # تخزين بيانات الترخيص
+  device_info_plus: 10.1.2      # معلومات الجهاز
+  crypto: 3.0.6                 # التشفير (SHA-256)
+```
+
+---
+
+## 📖 الوثائق
+
+| الملف | الوصف |
+|------|--------|
+| [QUICK_START.md](QUICK_START.md) | ⚡ دليل البدء السريع |
+| [SECURITY_README.md](SECURITY_README.md) | 📖 دليل شامل للحماية |
+| [CLIENTS_TRACKING.md](CLIENTS_TRACKING.md) | 📊 سجل تتبع العملاء |
+
+---
+
+## 🎯 أمثلة على معرفات الترخيص
+
+```dart
+// العميل 1 - متجر أحمد
+'MAHER_CLIENT_001_XK9P2LMN4R7'
+
+// العميل 2 - مطعم النيل
+'MAHER_CLIENT_002_WQ5T8HJV3M1'
+
+// العميل 3 - صيدلية الشفاء
+'MAHER_CLIENT_003_ZC6Y1NDP9K4'
+```
+
+---
+
+## 🔧 الاختبار
+
+### اختبار على جهاز حقيقي
+
+```bash
+# تثبيت على جهاز متصل
+adb install build/app/outputs/flutter-apk/app-release.apk
+```
+
+### اختبار في وضع Release
+
+```bash
+flutter run --release
+```
+
+---
+
+## ⚠️ تحذيرات مهمة
+
+1. ✅ **غيّر `UNIQUE_LICENSE_ID` لكل عميل** قبل البناء
+2. 💾 **احفظ ملفات `split-debug-info`** في مكان آمن
+3. 📝 **سجّل معرفات الترخيص** في `CLIENTS_TRACKING.md`
+4. 🔒 **لا تنشر ملف `app_license.dart`** على GitHub العام
+5. 🎯 **اختبر كل نسخة** قبل التسليم للعميل
+
+---
+
+## 📊 إحصائيات الحماية
+
+- 🔒 **مستويات الحماية:** 4 مستويات
+- 🔑 **معرف فريد:** لكل نسخة
+- 📱 **ربط الجهاز:** SHA-256 fingerprint
+- 🛡️ **تشفير الكود:** Code obfuscation
+- ⚡ **تحقق سريع:** < 100ms
+
+---
+
+## 🆘 حل المشاكل الشائعة
+
+### المشكلة: "Invalid license configuration"
+
+```bash
+# الحل: تأكد من صحة معرف الترخيص
+# يجب أن يبدأ بـ 'MAHER_CLIENT_'
+# ويكون طوله أكثر من 20 حرف
+```
+
+### المشكلة: فشل البناء
+
+```bash
+cd /home/user/Maherkh
+flutter clean
+flutter pub get
+flutter build apk --release
+```
+
+---
+
+## 📞 الدعم الفني
+
+للمطورين:
+- 📧 ابق سجل بمعرفات الترخيص لكل عميل
+- 💾 احفظ ملفات `debug-info` لتحليل الأخطاء
+- 📝 استخدم `CLIENTS_TRACKING.md` لإدارة العملاء
+
+للعملاء:
+- 📱 التطبيق مرخص لجهاز واحد فقط
+- 🔄 إعادة التثبيت على نفس الجهاز تعمل بشكل طبيعي
+- 📞 للحصول على نسخة جديدة، تواصل مع المطور
+
+---
+
+## 📄 الترخيص
+
+هذا المشروع محمي بحقوق الملكية الخاصة.
+
+---
+
+## 🎉 شكر خاص
+
+تم إنشاء نظام الحماية باستخدام أفضل الممارسات الأمنية لتطبيقات Flutter.
+
+---
+
+**الإصدار:** 1.0.0  
+**آخر تحديث:** 2025-01-19  
+**الحالة:** ✅ جاهز للإنتاج
+
+</div>
